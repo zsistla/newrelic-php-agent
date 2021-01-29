@@ -1,0 +1,40 @@
+# This is a basic workflow to help you get started with Actions
+
+name: CI
+
+#
+# Controls when the action will run. 
+#
+on:
+  # Triggers the workflow on push or pull request events but only for the main branch
+#  push:
+#    branches: [ main ]
+#  pull_request:
+#    branches: [ main ]
+
+  # Allows you to run this workflow manually from the Actions tab
+  workflow_dispatch:
+
+jobs:
+  phptest:
+    env:
+      PHP_VER: '8.0'
+      ARCH: x64
+      BUILD_TYPE: pr
+      BRANCH: ${{ github.event.client_payload.ref }}
+    runs-on: ubuntu-latest
+    steps:
+      - run: echo inputs.tag ${BRANCH}
+      - run: echo ghw ${GITHUB_WORKSPACE}
+      - run: echo ghPATH ${GITHUB_PATH}
+      - run: echo HOME ${HOME}
+      - run: echo RUNNER_WORKSPACE ${RUNNER_WORKSPACE}
+      - run: echo RUNNER_TEMP ${RUNNER_TEMP}
+      - name: Checkout repo
+        uses: actions/checkout@v2
+        with:
+          ref: ${{ github.event.client_payload.ref }}
+      - name: build image
+        run: docker build --build-arg ARCH=$ARCH --build-arg PHP_VER=$PHP_VER --build-arg BUILD_TYPE=$BUILD_TYPE -f ./.github/docker/linux/${ARCH}/Dockerfile -t temp1:test1 .
+      - name: run image
+        run: docker run --name runtest --workdir /github/workspace --rm -e HOME -e GITHUB_JOB -e GITHUB_REF -e GITHUB_SHA -e GITHUB_REPOSITORY -e GITHUB_REPOSITORY_OWNER -e GITHUB_RUN_ID -e GITHUB_RUN_NUMBER -e GITHUB_RETENTION_DAYS -e GITHUB_ACTOR -e GITHUB_WORKFLOW -e GITHUB_HEAD_REF -e GITHUB_BASE_REF -e GITHUB_EVENT_NAME -e GITHUB_SERVER_URL -e GITHUB_API_URL -e GITHUB_GRAPHQL_URL -e GITHUB_WORKSPACE -e GITHUB_ACTION -e GITHUB_EVENT_PATH -e GITHUB_ACTION_REPOSITORY -e GITHUB_ACTION_REF -e GITHUB_PATH -e GITHUB_ENV -e RUNNER_OS -e RUNNER_TOOL_CACHE -e RUNNER_TEMP -e RUNNER_WORKSPACE -e ACTIONS_RUNTIME_URL -e ACTIONS_RUNTIME_TOKEN -e ACTIONS_CACHE_URL -v "/var/run/docker.sock":"/var/run/docker.sock" -v "/home/runner/work/_temp/_github_home":"/github/home" -v "/home/runner/work/_temp/_github_workflow":"/github/workflow" -v "/home/runner/work/_temp/_runner_file_commands":"/github/file_commands" -v "${GITHUB_WORKSPACE}":"/github/workspace" temp1:test1
