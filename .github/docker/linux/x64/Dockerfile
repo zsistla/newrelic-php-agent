@@ -32,6 +32,7 @@ ENV BUILD_TYPE=$BUILD_TYPE
 RUN sed -Ei '/.*partner/! s/^# (deb-src .*)/\1/g' /etc/apt/sources.list
 
 ARG DEBIAN_FRONTEND=noninteractive
+RUN add-apt-repository ppa:longsleep/golang-backports
 RUN apt-get update
 RUN apt-get install -y build-essential
 
@@ -40,7 +41,7 @@ RUN apt-get install -y build-essential
 #
 RUN apt-get update \
  && apt-get -y install gcc git netcat wget unzip \
- libpcre3 libpcre3-dev golang psmisc automake libtool \
+ libpcre3 libpcre3-dev psmisc automake libtool \
  insserv procps vim ${PHP_USER_SPECIFIED_PACKAGES}
 
 #RUN apt-get install -y default-libmysqlclient-dev libmcrypt-dev
@@ -68,7 +69,8 @@ RUN apt-get update && apt-get install -y \
   curl \
   dnsutils \
   git \
-  golang \
+#  golang \
+  golang-go \
   gyp \
   lcov \
   libc6 \
