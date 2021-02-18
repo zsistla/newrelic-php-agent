@@ -80,7 +80,8 @@ RUN apt-get update && apt-get install -y \
   python-dev \
   python-setuptools \
   python-yaml \
-  python3-argon2 \
+#  python3-argon2 \
+  argon2 \
   sqlite3 \
   libsqlite3-dev \
   libghc-argon2-dev \
