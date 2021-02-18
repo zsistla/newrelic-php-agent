@@ -12,6 +12,7 @@ ARG BUILD_TYPE
 FROM php:${PHP_VER}
 
 RUN docker-php-source extract
+RUN docker-php-ext-install mysqli pdo pdo_mysql
 
 #
 #These args need to be repeated so we can propogate the VARS within this build context.
@@ -42,7 +43,8 @@ RUN apt-get update \
  libpcre3 libpcre3-dev golang psmisc automake libtool \
  insserv procps vim ${PHP_USER_SPECIFIED_PACKAGES}
 
-RUN apt-get install -y default-libmysqlclient-dev libmcrypt-dev
+#RUN apt-get install -y default-libmysqlclient-dev libmcrypt-dev
+RUN apt-get install -y  libmcrypt-dev
 
 #
 # Other tools
