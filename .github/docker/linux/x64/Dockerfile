@@ -47,7 +47,10 @@ RUN apt-get install -y default-libmysqlclient-dev libmcrypt-dev
 #
 # Other tools
 #
-RUN apt-get install -y curl gdb valgrind libcurl4-openssl-dev pkg-config postgresql libpq-dev libedit-dev libreadline-dev git
+RUN apt-get install -y gdb valgrind 
+RUN apt-get install -y libcurl4-openssl-dev 
+RUN apt-get install -y pkg-config postgresql libpq-dev 
+RUN apt-get install -y libedit-dev libreadline-dev git
 
 #
 # Install other packages.
