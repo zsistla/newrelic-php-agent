@@ -38,7 +38,7 @@ jobs:
     strategy:
       matrix:
         os: [linux]
-        php_ver: ['8.0', '8.0-zts']
+        php_ver: ['5.5', '5.6-zts', '7.0', '7.4-zts', '8.0', '8.0-zts']
         arch: ['x64', 'x86']
     steps:
       - name: Checkout Repo 
