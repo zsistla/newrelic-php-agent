@@ -32,7 +32,6 @@ ENV BUILD_TYPE=$BUILD_TYPE
 RUN sed -Ei '/.*partner/! s/^# (deb-src .*)/\1/g' /etc/apt/sources.list
 
 ARG DEBIAN_FRONTEND=noninteractive
-RUN add-apt-repository ppa:longsleep/golang-backports
 RUN apt-get update
 RUN apt-get install -y build-essential
 
@@ -44,7 +43,6 @@ RUN apt-get update \
  libpcre3 libpcre3-dev psmisc automake libtool \
  insserv procps vim ${PHP_USER_SPECIFIED_PACKAGES}
 
-#RUN apt-get install -y default-libmysqlclient-dev libmcrypt-dev
 RUN apt-get install -y  libmcrypt-dev
 
 #
@@ -53,9 +51,10 @@ RUN apt-get install -y  libmcrypt-dev
 RUN apt-get install -y gdb valgrind 
 RUN apt-get install -y libcurl4-openssl-dev 
 RUN apt-get install -y pkg-config 
-#RUN apt-get install -y postgresql 
 RUN apt-get install -y libpq-dev 
 RUN apt-get install -y libedit-dev libreadline-dev git
+
+RUN apt-get update
 
 #
 # Install other packages.
@@ -70,7 +69,7 @@ RUN apt-get update && apt-get install -y \
   dnsutils \
   git \
 #  golang \
-  golang-go \
+#  golang-1.11 \
   gyp \
   lcov \
   libc6 \
@@ -84,7 +83,6 @@ RUN apt-get update && apt-get install -y \
   python-dev \
   python-setuptools \
   python-yaml \
-#  python3-argon2 \
   argon2 \
   sqlite3 \
   libsqlite3-dev \
@@ -99,7 +97,11 @@ RUN apt-get update && apt-get install -y \
   wget \
   zip && apt-get clean
 
-RUN nproc
+# golang
+RUN wget --quiet https://golang.org/dl/go1.10.8.linux-amd64.tar.gz -O- | tar -C /usr/local -zxvf -
+ENV GOROOT /usr/local/go
+ENV GOPATH="${HOME}/go"
+ENV PATH="${GOPATH}/bin:${GOROOT}/bin:${PATH}"
 
 COPY /.github/docker/linux/release_build.sh /release_build.sh
 COPY /.github/docker/linux/pr_build.sh /pr_build.sh
