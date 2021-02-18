@@ -155,7 +155,9 @@ EOF
     ;;
   *)
     printf "Running agent integration tests (PHP=%s ZTS=disabled)\n" "$PHPS"
-    make integration PHPS="$PHPS" INTEGRATION_ARGS="--retry=1"
+    # temporarily disabling lasp on GHA
+    # make integration PHPS="$PHPS" INTEGRATION_ARGS="--retry=1"
+    make -j $(nproc) integration PHPS="$PHPS" INTEGRATION_ARGS="--retry=1" "ARCH=${ARCH}"
     ;;
   esac
   printf \\n
