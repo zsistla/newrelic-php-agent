@@ -54,8 +54,8 @@ jobs:
         - os: linux
           php_ver: '7.3'
           arch: 'x86'
-        - os: linux
-          php_ver: '7.4'
+          os: linux
+          php_ver: '7.4-zts'
           arch: 'x86'
     steps:
       - name: Checkout Repo 
