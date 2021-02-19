@@ -7,22 +7,10 @@
 # ARGs passed from GHA workflow.
 #
 ARG PHP_VER
-ARG ARCH
-ARG BUILD_TYPE
+
 FROM php:${PHP_VER}
 
 RUN docker-php-source extract
-RUN docker-php-ext-install mysqli pdo pdo_mysql
-
-#
-#These args need to be repeated so we can propogate the VARS within this build context.
-#
-ARG PHP_VER
-ARG ARCH
-ARG BUILD_TYPE
-ENV PHP_VER=${PHP_VER}
-ENV ARCH=$ARCH
-ENV BUILD_TYPE=$BUILD_TYPE
 
 #
 # Uncomment deb-src lines for all enabled repos. First part of single-quoted
@@ -39,22 +27,15 @@ RUN apt-get install -y build-essential
 # PHP dependencies
 #
 RUN apt-get update \
- && apt-get -y install gcc git netcat wget unzip \
- libpcre3 libpcre3-dev psmisc automake libtool \
- insserv procps vim ${PHP_USER_SPECIFIED_PACKAGES}
-
-RUN apt-get install -y  libmcrypt-dev
+ && apt-get -y install gcc git netcat \
+ libpcre3 libpcre3-dev golang psmisc automake libtool \
+ insserv procps vim ${PHP_USER_SPECIFIED_PACKAGES} \
+ zlib1g-dev libmcrypt-dev
 
 #
 # Other tools
 #
-RUN apt-get install -y gdb valgrind 
-RUN apt-get install -y libcurl4-openssl-dev 
-RUN apt-get install -y pkg-config 
-RUN apt-get install -y libpq-dev 
-RUN apt-get install -y libedit-dev libreadline-dev git
-
-RUN apt-get update
+RUN apt-get install -y gdb valgrind libcurl4-openssl-dev pkg-config libpq-dev libedit-dev libreadline-dev git
 
 #
 # Install other packages.
@@ -68,8 +49,6 @@ RUN apt-get update && apt-get install -y \
   curl \
   dnsutils \
   git \
-#  golang \
-#  golang-1.11 \
   gyp \
   lcov \
   libc6 \
@@ -83,30 +62,48 @@ RUN apt-get update && apt-get install -y \
   python-dev \
   python-setuptools \
   python-yaml \
-  argon2 \
   sqlite3 \
   libsqlite3-dev \
-  libghc-argon2-dev \
   openssl \
   libxml2 \
   libxml2-dev \
   libonig-dev \
   libssl-dev \
-  telnet \
   unzip \
   wget \
   zip && apt-get clean
 
-# golang
-RUN wget --quiet https://golang.org/dl/go1.10.8.linux-amd64.tar.gz -O- | tar -C /usr/local -zxvf -
-ENV GOROOT /usr/local/go
-ENV GOPATH="${HOME}/go"
-ENV PATH="${GOPATH}/bin:${GOROOT}/bin:${PATH}"
-
-COPY /.github/docker/linux/release_build.sh /release_build.sh
-COPY /.github/docker/linux/pr_build.sh /pr_build.sh
+#
+# If the debian version is jessie or stretch, we need to install go manually;
+# otherwise, we just install the golang package from the repository.
+# go 1.11.6 matches the version that buster uses.
+#
+RUN if [ -z "$(grep '^10\.' /etc/debian_version)" ]; then \
+      wget --quiet https://golang.org/dl/go1.11.6.linux-amd64.tar.gz -O- | tar -C /usr/local -zxvf -; \
+      export GOROOT=/usr/local/go; \
+      exportGOPATH="${HOME}/go"; \
+      exportPATH="${GOPATH}/bin:${GOROOT}/bin:${PATH}"; \
+    else \
+      apt-get install -y golang; \
+    fi
 
 #
-#Use shell form of ENTRYPOINT to pass the env variable.
+# If the debian version is jessie, don't install argon2
 #
-ENTRYPOINT /${BUILD_TYPE}_build.sh
+RUN if [ -z "$(grep '^8\.' /etc/debian_version)" ]; then \
+    apt-get install -y argon2 libghc-argon2-dev; \
+    fi
+
+#
+# These args need to be repeated so we can propagate the VARS within this build context.
+#
+ARG PHP_VER
+ARG ARCH
+ARG BUILD_TYPE
+ENV PHP_VER=${PHP_VER}
+ENV ARCH=$ARCH
+ENV BUILD_TYPE=$BUILD_TYPE
+
+COPY /.github/docker/linux/${BUILD_TYPE}_build.sh /build.sh
+
+ENTRYPOINT ["/build.sh"]

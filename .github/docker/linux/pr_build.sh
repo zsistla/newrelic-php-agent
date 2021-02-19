@@ -11,8 +11,7 @@
 # the axiom tests.
 #
 # This script is meant to run in GHA  with the GitHub Pull Request
-# action which  handles reporting the outcome to
-# GitHub for us.
+# action which handles reporting the outcome to GitHub for us.
 #
 
 set -e
@@ -42,6 +41,12 @@ export PATH
 
 
 #
+# Set LD_LIBRARY_PATH
+#
+LD_LIBRARY_PATH=/usr/local/lib
+export LD_LIBRARY_PATH
+
+#
 # Get PHPS from the environment.
 #
 
@@ -62,7 +67,7 @@ PHP_SAPIS=$(php-config --php-sapis)
 
 case $PHP_SAPIS in
   *embed*)
-     PHP_SAPIS_EMBED=1
+    PHP_SAPIS_EMBED=1
     ;;
   *)
     PHP_SAPIS_EMBED=0
@@ -77,7 +82,9 @@ VALGRIND_ISSUE=0
     echo "php = $PHPS"
 case $PHPS in
   *8.0*)
-       VALGRIND_ISSUE=1
+    if [ $ARCH = "x86" ]; then
+      VALGRIND_ISSUE=1
+    fi
     ;;
   *)
     VALGRIND_ISSUE=0
@@ -85,7 +92,9 @@ case $PHPS in
 esac
     echo "valgrindissue : $VALGRIND_ISSUE"
 
-if [ "$(uname)" = Linux ] && [ ! -e /etc/alpine-release ] && [ $PHP_SAPIS_EMBED ]&& [ $VALGRIND_ISSUE = 0 ]; then
+make axiom-clean
+
+if [ "$(uname)" = Linux ] && [ ! -e /etc/alpine-release ] && [ $PHP_SAPIS_EMBED ] && [ $VALGRIND_ISSUE = 0 ]; then
   do_valgrind=yes
   printf \\n
   printf 'grinding axiom tests\n'
@@ -127,7 +136,7 @@ EOF
 #
 # Build a specific version of PHP and run unit and integration tests.
 #
-# If  PHP with thread safety (ZTS) is enabled, build to ensure
+# If PHP with thread safety (ZTS) is enabled, build to ensure
 # it compiles cleanly, but don't run the integration tests because
 # (empirically) some PHP extensions are inconsistent with ZTS enabled leading
 # to spurious failures that are not agent bugs.
@@ -153,26 +162,26 @@ EOF
     ;;
   *)
     printf "Running agent integration tests (PHP=%s ZTS=disabled)\n" "$PHPS"
-    make integration PHPS="$PHPS" "ARCH=${ARCH}" INTEGRATION_ARGS="--retry=1"
+    printf "Temporarily disable integration tests in GHA while determining what to do with private keys.\n"
+    #make integration PHPS="$PHPS" "ARCH=${ARCH}" INTEGRATION_ARGS="--retry=1"
     ;;
   esac
   printf \\n
 
   #
-  # Run the agent unit tests (just on Linux, for now).
+  # Run the agent unit tests (just on Linux).
   #
   if [ "$(uname -s)" = 'Linux' ]; then
     PHP_PREFIX=$(php-config --prefix)
-    #PHP_SAPIS=$(php-config --php-sapis)
 
     case $PHP_SAPIS in
       *embed*)
         if [ -n "$do_valgrind" ]; then
           printf 'grinding agent unit tests\n'
-          make -r -s -j $(nproc) agent-valgrind "ARCH=${ARCH}" LDFLAGS='-Wl,--no-warn-search-mismatch -Wl,-z,muldefs'
+          make -r -s -j $(nproc) agent-valgrind "ARCH=${ARCH}"
         else
           printf 'running agent unit tests\n'
-          make -r -s -j $(nproc) agent-run-tests "ARCH=${ARCH}"
+          make -r -s -j $(nproc) agent-check "ARCH=${ARCH}"
         fi
 	;;
       *)
